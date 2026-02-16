@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '*.md'
+      - '.gitignore'
+      - 'docker-compose*.yml'
+  workflow_call:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: Release
+
+permissions:
+      packages: read
+      contents: read
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v6
+  
+      - name: setup .net
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+  
+      - name: cache nuget packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: authenticate github packages
+        run: |
+          dotnet nuget remove source github-fcg --configfile nuget.config || true
+          dotnet nuget add source "https://nuget.pkg.github.com/FIAP-Cloud-Gaming/index.json" \
+          --name github-fcg \
+          --username FIAP-Cloud-Gaming \
+          --password ${{ secrets.GITHUB_TOKEN }} \
+          --store-password-in-clear-text \
+          --configfile nuget.config
+
+      - name: restore
+        run: dotnet restore src/Gateway.API/Gateway.API.csproj
+
+      - name: build
+        run: dotnet build src/Gateway.API/Gateway.API.csproj --configuration ${{ env.CONFIGURATION }} --no-restore

@@ -262,6 +262,29 @@ services:
       retries: 3
       start_period: 20s
 
+  # ======================================
+  # Serverless (Azure Functions)
+  # ======================================
+  functions:
+    image: ${DOCKER_REGISTRY:-fcg}/functions:${TAG:-latest}
+    build:
+      context: ../Serverless
+      dockerfile: src/Functions/Dockerfile
+    container_name: fcg-functions
+    environment:
+      - AzureWebJobsStorage=UseDevelopmentStorage=true
+      - FUNCTIONS_WORKER_RUNTIME=dotnet-isolated
+      - RabbitMQ=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      payment.api:
+        condition: service_healthy
+      catalog.api:
+        condition: service_healthy
+    networks:
+      - fcg-network
+
 networks:
   fcg-network:
     driver: bridge
