@@ -171,6 +171,8 @@ services:
     build:
       context: ../Identity
       dockerfile: src/Identity.API/Dockerfile
+      secrets:
+        - github_token
     container_name: fcg-identity-api
     depends_on:
       postgres-identity:
@@ -193,6 +195,8 @@ services:
     build:
       context: ../Catalog
       dockerfile: src/Catalog.API/Dockerfile
+      secrets:
+        - github_token
     container_name: fcg-catalog-api
     depends_on:
       postgres-catalog:
@@ -221,6 +225,8 @@ services:
     build:
       context: ../Payment
       dockerfile: src/Payment.API/Dockerfile
+      secrets:
+        - github_token
     container_name: fcg-payment-api
     depends_on:
       postgres-payment:
@@ -245,6 +251,8 @@ services:
     build:
       context: .
       dockerfile: src/Gateway.API/Dockerfile
+      secrets:
+        - github_token
     container_name: fcg-gateway-api
     depends_on:
       identity.api:
@@ -284,6 +292,10 @@ services:
         condition: service_healthy
     networks:
       - fcg-network
+
+secrets:
+  github_token:
+    environment: GITHUB_TOKEN
 
 networks:
   fcg-network:

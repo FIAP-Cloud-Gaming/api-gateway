@@ -21,14 +21,55 @@ API Gateway para o FIAP Cloud Gaming, implementado com YARP (Yet Another Reverse
 
 ## Execucao Local
 
+### Pre-requisitos
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- [GitHub CLI](https://cli.github.com/) (`gh`)
+- `GITHUB_TOKEN` configurado no shell (ver abaixo)
+
+### Configuracao do GitHub Token
+
+Os microsservicos dependem de pacotes NuGet privados do GitHub Packages. O token e necessario para o Docker build.
+
 ```bash
-# Apenas o Gateway (requer servicos rodando)
+# 1. Autenticar no GitHub CLI
+gh auth login
+gh auth refresh --scopes read:packages
+
+# 2. Adicionar ao perfil do shell:
+
+# PowerShell (notepad $PROFILE):
+$env:GITHUB_TOKEN = $(gh auth token)
+
+# Bash (~/.bashrc):
+export GITHUB_TOKEN=$(gh auth token)
+
+# 3. Reabrir o terminal e verificar:
+# PowerShell: echo $env:GITHUB_TOKEN
+# Bash: echo $GITHUB_TOKEN
+```
+
+> O token e passado ao Docker via BuildKit secrets e nao fica salvo nas imagens.
+
+### Subir o sistema completo
+
+```bash
+# Primeiro build (compila as imagens)
+cd Gateway
+docker compose up --build -d
+
+# Execucoes seguintes
+docker compose up -d
+
+# Se erro de container duplicado
+docker compose down && docker compose up -d
+```
+
+### Apenas o Gateway (requer servicos rodando)
+
+```bash
 cd Gateway
 dotnet run --project src/Gateway.API
-
-# Sistema completo via Docker Compose
-cd Gateway
-docker compose up -d
 ```
 
 ## Portas (Development)
